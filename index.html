@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>공실연소장 AI 사례공유집</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    header {
+      background: #1f3b57;
+      color: white;
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    header h1 { margin: 0 0 10px; }
+    header p { margin: 0; opacity: 0.9; }
+
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* ---------- Tabs ---------- */
+    .tab-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: nowrap;
+    }
+
+    .tab-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 8px;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      color: #1f3b57;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+    }
+
+    .tab-btn:hover { transform: translateY(-1px); }
+
+    .tab-btn.active {
+      background: #1f3b57;
+      color: white;
+    }
+
+    .tab-btn .count {
+      font-weight: normal;
+      opacity: 0.85;
+      font-size: 14px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---------- Cards / form (register tab) ---------- */
+    .top-area {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      background: #1f3b57;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #2d5378;
+    }
+
+    /* ---------- List / search tab ---------- */
+    .filter-bar {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .filter-bar input, .filter-bar select {
+      margin-bottom: 0;
+    }
+
+    .result-count {
+      font-size: 13px;
+      color: #777;
+      margin: 0 0 14px;
+    }
+
+    .case-item {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .case-header {
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+    }
+
+    .case-header:hover { background: #fafbfc; }
+
+    .case-header-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e8f1fa;
+      color: #1f3b57;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tool-badge {
+      display: inline-block;
+      background: #f0f0f0;
+      color: #555;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .case-title {
+      font-size: 17px;
+      font-weight: bold;
+      margin: 2px 0 4px;
+    }
+
+    .case-author {
+      font-size: 13px;
+      color: #1f3b57;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .case-preview {
+      font-size: 13px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toggle-icon {
+      font-size: 13px;
+      color: #1f3b57;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .case-detail {
+      display: none;
+      padding: 4px 16px 18px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .case-detail.open { display: block; }
+
+    .meta {
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    .prompt-box {
+      background: #f7f7f7;
+      border-left: 4px solid #1f3b57;
+      padding: 10px;
+      margin-top: 10px;
+      white-space: pre-line;
+    }
+
+    .comment-area {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed #ddd;
+    }
+
+    .comment {
+      font-size: 14px;
+      background: #f4f6f8;
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    .detail-actions {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .detail-actions input { margin: 0; }
+    .detail-actions button { margin: 0; width: auto; padding: 10px 14px; }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      padding: 40px 0;
+    }
+
+    @media (max-width: 800px) {
+      .top-area {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-actions button { width: 100%; }
+
+      .tab-btn {
+        font-size: 13px;
+        padding: 12px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>공실연소장 AI 사례공유집</h1>
+  <p>아파트 관리사무소장들이 AI 활용 사례와 프롬프트를 공유하는 실무 플랫폼</p>
+</header>
+
+<div class="container">
+
+  <div class="tab-nav">
+    <button id="tabBtn-list" class="tab-btn active" onclick="switchTab('list')">
+      📋 사례 목록·검색 <span class="count" id="listCountLabel">(0)</span>
+    </button>
+    <button id="tabBtn-register" class="tab-btn" onclick="switchTab('register')">
+      ✍️ 사례 등록
+    </button>
+  </div>
+
+  <!-- ===== 목록 / 검색 탭 ===== -->
+  <section id="panel-list" class="tab-panel active">
+    <section class="card">
+      <div class="filter-bar">
+        <input id="searchInput" placeholder="검색어 입력: 승강기, 민원, 안내문 등" oninput="renderCases()" />
+        <select id="categoryFilter" onchange="renderCases()">
+          <option value="전체">전체 분야</option>
+          <option value="행정문서 작성">행정문서 작성</option>
+          <option value="입주민 민원 대응">입주민 민원 대응</option>
+          <option value="시설관리">시설관리</option>
+          <option value="회계·장기수선">회계·장기수선</option>
+          <option value="법령·규정 검색">법령·규정 검색</option>
+          <option value="APP개발">APP개발</option>
+          <option value="학습 에이전트">학습 에이전트</option>
+          <option value="프롬프트 공유">프롬프트 공유</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <p class="result-count" id="resultCount"></p>
+      <div id="caseList"></div>
+    </section>
+  </section>
+
+  <!-- ===== 등록 탭 ===== -->
+  <section id="panel-register" class="tab-panel">
+    <div class="top-area">
+      <section class="card">
+        <h2>AI 활용 사례 등록</h2>
+
+        <label>제목</label>
+        <input id="title" placeholder="예: 승강기 교체공사 안내문 작성 사례" />
+
+        <label>관리사무소장 이름</label>
+        <input id="managerName" placeholder="예: 홍길동 소장" />
+
+        <label>아파트명</label>
+        <input id="aptName" placeholder="예: 행복아파트" />
+
+        <label>업무 분야</label>
+        <select id="category">
+          <option value="행정문서 작성">행정문서 작성</option>
+          <option value="입주민 민원 대응">입주민 민원 대응</option>
+          <option value="시설관리">시설관리</option>
+          <option value="회계·장기수선">회계·장기수선</option>
+          <option value="법령·규정 검색">법령·규정 검색</option>
+          <option value="APP개발">APP개발</option>
+          <option value="학습 에이전트">학습 에이전트</option>
+          <option value="프롬프트 공유">프롬프트 공유</option>
+          <option value="기타">기타</option>
+        </select>
+
+        <label>사용한 AI</label>
+        <input id="tool" placeholder="예: ChatGPT, Gemini, Claude" />
+
+        <label>기존 문제</label>
+        <textarea id="problem" placeholder="어떤 업무상 어려움이 있었나요?"></textarea>
+
+        <label>AI 활용 방법</label>
+        <textarea id="method" placeholder="AI를 어떻게 활용했나요?"></textarea>
+
+        <label>사용한 프롬프트</label>
+        <textarea id="prompt" placeholder="복사해서 쓸 수 있는 프롬프트를 적어주세요."></textarea>
+
+        <label>결과 및 활용 팁</label>
+        <textarea id="result" placeholder="결과와 주의사항을 적어주세요."></textarea>
+
+        <button onclick="addCase()">사례 등록하기</button>
+      </section>
+
+      <aside class="card">
+        <h2>사이트 소개</h2>
+        <p>
+          관리사무소 업무에 AI를 어떻게 활용할 수 있는지 공유하는 공간입니다.
+        </p>
+        <p>
+          안내문 작성, 민원 대응, 회계 및 장충금 처리, 시설관리, 입대의 회의 자료 생성, 법령 검색 등
+          실제 업무 사례를 모아 실무에 바로 활용할 수 있습니다.
+        </p>
+        <hr />
+        <p><strong>추천 사용법</strong></p>
+        <p>
+          좋은 사례는 "문제 → AI 활용 방법 → 프롬프트 → 결과" 순서로 작성해주세요.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+</div>
+
+<script type="module">
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, doc, updateDoc, deleteDoc,
+    arrayUnion, onSnapshot, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  // ============================================================
+  // Firebase 프로젝트: ai-casebook
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-ukkpVs7VjBovFHUYRnp1-BJ2Gpkr4T4",
+    authDomain: "ai-casebook.firebaseapp.com",
+    databaseURL: "https://ai-casebook-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "ai-casebook",
+    storageBucket: "ai-casebook.firebasestorage.app",
+    messagingSenderId: "524616203336",
+    appId: "1:524616203336:web:6a8b038ab2cec052c5ec7d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const casesCol = collection(db, "aiCases");
+
+  let cases = [];
+  let openCaseIds = new Set();
+  let firestoreReady = false;
+
+  function switchTab(tab) {
+    document.getElementById("panel-list").classList.toggle("active", tab === "list");
+    document.getElementById("panel-register").classList.toggle("active", tab === "register");
+    document.getElementById("tabBtn-list").classList.toggle("active", tab === "list");
+    document.getElementById("tabBtn-register").classList.toggle("active", tab === "register");
+    if (tab === "list") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Firestore 실시간 구독: 누군가 사례를 등록/삭제/댓글 작성하면
+  // 접속해 있는 모든 사용자 화면에 자동으로 반영됩니다.
+  const casesQuery = query(casesCol, orderBy("createdAt", "desc"));
+  onSnapshot(casesQuery, (snapshot) => {
+    firestoreReady = true;
+    cases = snapshot.docs.map(d => {
+      const data = d.data();
+      return { id: d.id, ...data, comments: data.comments || [] };
+    });
+    renderCases();
+  }, (error) => {
+    console.error("Firestore 연결 오류:", error);
+    document.getElementById("caseList").innerHTML =
+      `<div class="empty">데이터를 불러오지 못했습니다.<br>Firebase 설정(firebaseConfig) 또는 보안 규칙을 확인해주세요.<br><small>${escapeHtml(error.message || "")}</small></div>`;
+  });
+
+  async function addCase() {
+    const title = document.getElementById("title").value.trim();
+    const managerName = document.getElementById("managerName").value.trim();
+    const aptName = document.getElementById("aptName").value.trim();
+    const category = document.getElementById("category").value;
+    const tool = document.getElementById("tool").value.trim();
+    const problem = document.getElementById("problem").value.trim();
+    const method = document.getElementById("method").value.trim();
+    const prompt = document.getElementById("prompt").value.trim();
+    const result = document.getElementById("result").value.trim();
+
+    if (!title || !problem || !method) {
+      alert("제목, 기존 문제, AI 활용 방법은 필수입니다.");
+      return;
+    }
+
+    const submitBtn = document.querySelector('#panel-register button');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "등록 중...";
+
+    try {
+      const docRef = await addDoc(casesCol, {
+        title, managerName, aptName, category, tool, problem, method, prompt, result,
+        comments: [],
+        createdAt: serverTimestamp()
+      });
+      openCaseIds.add(docRef.id);
+      clearForm();
+      switchTab("list");
+    } catch (error) {
+      console.error("등록 실패:", error);
+      alert("사례 등록에 실패했습니다. Firebase 설정 또는 인터넷 연결을 확인해주세요.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "사례 등록하기";
+    }
+  }
+
+  function clearForm() {
+    document.getElementById("title").value = "";
+    document.getElementById("managerName").value = "";
+    document.getElementById("aptName").value = "";
+    document.getElementById("tool").value = "";
+    document.getElementById("problem").value = "";
+    document.getElementById("method").value = "";
+    document.getElementById("prompt").value = "";
+    document.getElementById("result").value = "";
+  }
+
+  function toggleCase(caseId) {
+    if (openCaseIds.has(caseId)) {
+      openCaseIds.delete(caseId);
+    } else {
+      openCaseIds.add(caseId);
+    }
+    renderCases();
+  }
+
+  async function addComment(caseId) {
+    const input = document.getElementById(`comment-${caseId}`);
+    const text = input.value.trim();
+    if (!text) return;
+
+    try {
+      await updateDoc(doc(db, "aiCases", caseId), {
+        comments: arrayUnion(text)
+      });
+    } catch (error) {
+      console.error("댓글 등록 실패:", error);
+      alert("댓글 등록에 실패했습니다.");
+    }
+  }
+
+  async function deleteCase(caseId) {
+    if (!confirm("이 사례를 삭제하시겠습니까? 모든 사용자에게 즉시 반영됩니다.")) return;
+
+    try {
+      openCaseIds.delete(caseId);
+      await deleteDoc(doc(db, "aiCases", caseId));
+    } catch (error) {
+      console.error("삭제 실패:", error);
+      alert("삭제에 실패했습니다.");
+    }
+  }
+
+  function renderCases() {
+    const list = document.getElementById("caseList");
+    const resultCount = document.getElementById("resultCount");
+    const listCountLabel = document.getElementById("listCountLabel");
+    const keyword = document.getElementById("searchInput").value.toLowerCase();
+    const selectedCategory = document.getElementById("categoryFilter").value;
+
+    listCountLabel.textContent = `(${cases.length})`;
+
+    const filtered = cases.filter(item => {
+      const text = `
+        ${item.title}
+        ${item.category}
+        ${item.tool}
+        ${item.managerName || ""}
+        ${item.aptName || ""}
+        ${item.problem}
+        ${item.method}
+        ${item.prompt}
+        ${item.result}
+      `.toLowerCase();
+
+      const matchKeyword = text.includes(keyword);
+      const matchCategory = selectedCategory === "전체" || item.category === selectedCategory;
+
+      return matchKeyword && matchCategory;
+    });
+
+    resultCount.textContent = `전체 ${cases.length}건 중 ${filtered.length}건 표시`;
+
+    if (filtered.length === 0) {
+      list.innerHTML = firestoreReady
+        ? `<div class="empty">등록된 사례가 없습니다.</div>`
+        : `<div class="empty">불러오는 중...</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(item => {
+      const isOpen = openCaseIds.has(item.id);
+      return `
+      <div class="case-item">
+        <div class="case-header" onclick="toggleCase('${item.id}')">
+          <div class="case-header-main">
+            <span class="badge">${escapeHtml(item.category)}</span>
+            <span class="tool-badge">${escapeHtml(item.tool || "미입력")}</span>
+            <div class="case-title">${escapeHtml(item.title)}</div>
+            <div class="case-author">✍️ ${escapeHtml(item.managerName || "작성자 미입력")}${item.aptName ? ` · ${escapeHtml(item.aptName)}` : ""}</div>
+            <div class="case-preview">${escapeHtml(item.problem)}</div>
+          </div>
+          <div class="toggle-icon">${isOpen ? "접기 ▲" : "자세히 ▼"}</div>
+        </div>
+
+        <div class="case-detail ${isOpen ? "open" : ""}">
+          <p><strong>기존 문제</strong><br>${escapeHtml(item.problem)}</p>
+          <p><strong>AI 활용 방법</strong><br>${escapeHtml(item.method)}</p>
+
+          ${item.prompt ? `
+            <div class="prompt-box">
+              <strong>사용한 프롬프트</strong><br>
+              ${escapeHtml(item.prompt)}
+            </div>
+          ` : ""}
+
+          ${item.result ? `<p><strong>결과 및 팁</strong><br>${escapeHtml(item.result)}</p>` : ""}
+
+          <div class="comment-area">
+            <strong>댓글 / 보완 팁</strong>
+            <div>
+              ${item.comments.map(comment => `
+                <div class="comment">${escapeHtml(comment)}</div>
+              `).join("")}
+            </div>
+
+            <div class="detail-actions">
+              <input id="comment-${item.id}" placeholder="댓글 또는 보완 팁 입력" />
+              <button onclick="addComment('${item.id}')">댓글 등록</button>
+              <button onclick="deleteCase('${item.id}')" style="background:#999;">사례 삭제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    }).join("");
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // onclick 속성에서 호출할 수 있도록 전역(window)에 노출
+  window.switchTab = switchTab;
+  window.addCase = addCase;
+  window.toggleCase = toggleCase;
+  window.addComment = addComment;
+  window.deleteCase = deleteCase;
+  window.renderCases = renderCases;
+</script>
+
+</body>
+</html>
